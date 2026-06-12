@@ -1,0 +1,14 @@
+{
+  "name": "logo-color-guess",
+  "version": "1.0.0",
+  "description": "Mobile-first static web game: guess the official brand color of famous logos.",
+  "private": true,
+  "scripts": {
+    "extract-logos": "node scripts/extract-logos.js",
+    "start": "python3 -m http.server 8000"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "simple-icons": "^16.23.0"
+  }
+}
