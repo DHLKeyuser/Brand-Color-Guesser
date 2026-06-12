@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0e0f1a" />
+  <meta name="description" content="Logo Color Guess — guess the official brand color of famous logos and score points based on how close you get." />
+  <title>Logo Color Guess</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand-mark">
+        <span class="dot dot-a"></span>
+        <span class="dot dot-b"></span>
+        <span class="dot dot-c"></span>
+      </div>
+      <h1 class="title">Logo Color Guess</h1>
+      <div class="best" title="Best total score saved on this device">
+        <span class="best-label">Best</span>
+        <span class="best-value" id="bestScore">–</span>
+      </div>
+    </header>
+
+    <!-- GAME CARD -->
+    <main class="card" id="gameView">
+      <div class="progress-row">
+        <div class="progress-info">
+          <span class="round-label">Round</span>
+          <span class="round-value"><span id="roundNow">1</span>/<span id="roundTotal">10</span></span>
+        </div>
+        <div class="progress-info right">
+          <span class="round-label">Score</span>
+          <span class="round-value" id="totalScore">0</span>
+        </div>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+      <div class="stage" id="logoStage" aria-label="Brand logo">
+        <div class="stage-spinner" id="stageSpinner"></div>
+      </div>
+
+      <p class="question">What color is <span class="brand-name" id="brandName">…</span>'s logo?</p>
+
+      <!-- GUESS PHASE -->
+      <section class="guess-panel" id="guessPanel">
+        <div class="picker-wrap">
+          <label class="picker-label" for="colorPicker">
+            <span class="swatch-ring" id="pickerRing">
+              <input type="color" id="colorPicker" value="#7c5cff" aria-label="Pick a color" />
+            </span>
+            <span class="picker-text">Tap to pick</span>
+          </label>
+          <div class="hex-field">
+            <span class="hash">#</span>
+            <input
+              type="text"
+              id="hexInput"
+              inputmode="text"
+              autocomplete="off"
+              autocapitalize="characters"
+              spellcheck="false"
+              maxlength="6"
+              value="7C5CFF"
+              aria-label="HEX color value"
+            />
+          </div>
+        </div>
+        <button class="btn btn-primary" id="guessBtn">Lock in guess</button>
+      </section>
+
+      <!-- RESULT PHASE -->
+      <section class="result-panel" id="resultPanel" hidden>
+        <div class="score-badge" id="scoreBadge">
+          <span class="score-num" id="roundScoreNum">0</span>
+          <span class="score-out">/10</span>
+        </div>
+        <p class="score-caption" id="scoreCaption">Nice try!</p>
+
+        <div class="compare">
+          <div class="compare-col">
+            <span class="compare-label">Your selection</span>
+            <div class="compare-swatch" id="yourSwatch"></div>
+            <span class="compare-hex" id="yourHex">#000000</span>
+          </div>
+          <div class="compare-col">
+            <span class="compare-label">Original</span>
+            <div class="compare-swatch" id="origSwatch"></div>
+            <span class="compare-hex" id="origHex">#000000</span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="nextBtn">Next logo</button>
+      </section>
+    </main>
+
+    <!-- FINAL SUMMARY -->
+    <main class="card final-card" id="finalView" hidden>
+      <div class="final-emoji" id="finalRank">★</div>
+      <h2 class="final-title" id="finalTitle">Game over</h2>
+      <p class="final-sub">You finished all <span id="finalRounds">10</span> logos.</p>
+
+      <div class="final-score">
+        <span class="final-score-num" id="finalScore">0</span>
+        <span class="final-score-out">/<span id="finalMax">100</span></span>
+      </div>
+
+      <div class="final-meta">
+        <div class="final-meta-item">
+          <span class="meta-k">Best</span>
+          <span class="meta-v" id="finalBest">0</span>
+        </div>
+        <div class="final-meta-item">
+          <span class="meta-k">Accuracy</span>
+          <span class="meta-v" id="finalAccuracy">0%</span>
+        </div>
+      </div>
+
+      <p class="new-best" id="newBestTag" hidden>New personal best!</p>
+
+      <div class="final-actions">
+        <button class="btn btn-primary" id="playAgainBtn">Play again</button>
+        <button class="btn btn-ghost" id="shareBtn">Share result</button>
+      </div>
+    </main>
+
+    <footer class="footnote">
+      Logos via <a href="https://simpleicons.org" target="_blank" rel="noopener noreferrer">Simple Icons</a> (CC0). Colors are official brand values.
+    </footer>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
