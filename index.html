@@ -40,10 +40,12 @@
       </div>
       <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
 
+      <div class="play-area">
       <div class="stage" id="logoStage" aria-label="Brand logo">
         <div class="stage-spinner" id="stageSpinner"></div>
       </div>
 
+      <div class="play-side">
       <p class="question">What color is <span class="brand-name" id="brandName">…</span>'s logo?</p>
 
       <!-- GUESS PHASE -->
@@ -53,7 +55,7 @@
             <span class="swatch-ring" id="pickerRing">
               <input type="color" id="colorPicker" value="#7c5cff" aria-label="Pick a color" />
             </span>
-            <span class="picker-text">Tap to pick</span>
+            <span class="picker-text">Pick color</span>
           </label>
           <div class="hex-field">
             <span class="hash">#</span>
@@ -96,6 +98,8 @@
 
         <button class="btn btn-primary" id="nextBtn">Next logo</button>
       </section>
+      </div><!-- /.play-side -->
+      </div><!-- /.play-area -->
     </main>
 
     <!-- FINAL SUMMARY -->

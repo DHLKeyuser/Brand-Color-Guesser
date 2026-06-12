@@ -242,8 +242,9 @@ function loadRound() {
   els.brandName.textContent = brand.name;
 
   loadLogo(brand);
-  // start each round from a neutral mid color
+  // start each round from a neutral mid color (also previewed on the logo)
   applyColor("#808080");
+  liveRecolor("#808080");
   els.guessBtn.disabled = false;
 }
 
@@ -363,12 +364,24 @@ async function shareResult() {
 }
 
 // --- Events ---
+// Recolor the logo live to preview the current guess (guess phase only).
+function liveRecolor(hex) {
+  const norm = normalizeHex(hex);
+  if (!norm) return;
+  if (!els.resultPanel.hidden) return; // don't override the revealed answer
+  els.stage.style.setProperty("--logo-fill", norm);
+}
+
 els.colorPicker.addEventListener("input", (e) => {
   els.hexInput.value = e.target.value.replace("#", "").toUpperCase();
+  liveRecolor(e.target.value);
 });
 els.hexInput.addEventListener("input", (e) => {
   const norm = normalizeHex(e.target.value);
-  if (norm) els.colorPicker.value = norm.toLowerCase();
+  if (norm) {
+    els.colorPicker.value = norm.toLowerCase();
+    liveRecolor(norm);
+  }
 });
 els.hexInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") submitGuess();
