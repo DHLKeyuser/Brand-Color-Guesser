@@ -50,13 +50,36 @@
 
       <!-- GUESS PHASE -->
       <section class="guess-panel" id="guessPanel">
-        <div class="picker-wrap">
-          <label class="picker-label" for="colorPicker">
-            <span class="swatch-ring" id="pickerRing">
-              <input type="color" id="colorPicker" value="#7c5cff" aria-label="Pick a color" />
-            </span>
-            <span class="picker-text">Pick color</span>
-          </label>
+        <div class="picker">
+          <div class="picker-main">
+            <div class="preview-swatch" id="previewSwatch" aria-hidden="true"></div>
+            <div class="sliders" role="group" aria-label="Color sliders">
+              <div class="slider">
+                <div class="slider-track hue-track" id="hueTrack"
+                     role="slider" tabindex="0" aria-label="Hue"
+                     aria-valuemin="0" aria-valuemax="360" aria-valuenow="0">
+                  <div class="slider-handle" id="hueHandle"></div>
+                </div>
+                <span class="slider-cap">H</span>
+              </div>
+              <div class="slider">
+                <div class="slider-track" id="satTrack"
+                     role="slider" tabindex="0" aria-label="Saturation"
+                     aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                  <div class="slider-handle" id="satHandle"></div>
+                </div>
+                <span class="slider-cap">S</span>
+              </div>
+              <div class="slider">
+                <div class="slider-track" id="valTrack"
+                     role="slider" tabindex="0" aria-label="Darkness"
+                     aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+                  <div class="slider-handle" id="valHandle"></div>
+                </div>
+                <span class="slider-cap">D</span>
+              </div>
+            </div>
+          </div>
           <div class="hex-field">
             <span class="hash">#</span>
             <input

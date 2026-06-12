@@ -70,7 +70,13 @@ const els = {
   brandName: $("brandName"),
   guessPanel: $("guessPanel"),
   resultPanel: $("resultPanel"),
-  colorPicker: $("colorPicker"),
+  previewSwatch: $("previewSwatch"),
+  hueTrack: $("hueTrack"),
+  satTrack: $("satTrack"),
+  valTrack: $("valTrack"),
+  hueHandle: $("hueHandle"),
+  satHandle: $("satHandle"),
+  valHandle: $("valHandle"),
   hexInput: $("hexInput"),
   guessBtn: $("guessBtn"),
   nextBtn: $("nextBtn"),
@@ -102,6 +108,8 @@ let state = {
 };
 
 // --- Color helpers ---
+function clamp(n, lo, hi) { return Math.min(hi, Math.max(lo, n)); }
+
 function hexToRgb(hex) {
   const h = hex.replace("#", "");
   return {
@@ -109,6 +117,54 @@ function hexToRgb(hex) {
     g: parseInt(h.slice(2, 4), 16),
     b: parseInt(h.slice(4, 6), 16),
   };
+}
+
+function rgbToHex(r, g, b) {
+  const to = (n) => clamp(Math.round(n), 0, 255).toString(16).padStart(2, "0");
+  return ("#" + to(r) + to(g) + to(b)).toUpperCase();
+}
+
+// HSV/HSB <-> RGB. h in [0,360), s & v in [0,1]. RGB channels in [0,255].
+function hsvToRgb(h, s, v) {
+  h = ((h % 360) + 360) % 360;
+  s = clamp(s, 0, 1);
+  v = clamp(v, 0, 1);
+  const c = v * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = v - c;
+  let r = 0, g = 0, b = 0;
+  if (h < 60) { r = c; g = x; }
+  else if (h < 120) { r = x; g = c; }
+  else if (h < 180) { g = c; b = x; }
+  else if (h < 240) { g = x; b = c; }
+  else if (h < 300) { r = x; b = c; }
+  else { r = c; b = x; }
+  return {
+    r: Math.round((r + m) * 255),
+    g: Math.round((g + m) * 255),
+    b: Math.round((b + m) * 255),
+  };
+}
+
+function rgbToHsv(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const d = max - min;
+  let h = 0;
+  if (d !== 0) {
+    if (max === r) h = 60 * (((g - b) / d) % 6);
+    else if (max === g) h = 60 * (((b - r) / d) + 2);
+    else h = 60 * (((r - g) / d) + 4);
+  }
+  if (h < 0) h += 360;
+  const s = max === 0 ? 0 : d / max;
+  return { h, s, v: max };
+}
+
+function hsvHex(h, s, v) {
+  const c = hsvToRgb(h, s, v);
+  return rgbToHex(c.r, c.g, c.b);
 }
 
 function normalizeHex(raw) {
@@ -243,16 +299,8 @@ function loadRound() {
 
   loadLogo(brand);
   // start each round from a neutral mid color (also previewed on the logo)
-  applyColor("#808080");
-  liveRecolor("#808080");
+  updateSlidersFromHex("#808080");
   els.guessBtn.disabled = false;
-}
-
-function applyColor(hex) {
-  const norm = normalizeHex(hex);
-  if (!norm) return;
-  els.colorPicker.value = norm.toLowerCase();
-  els.hexInput.value = norm.replace("#", "");
 }
 
 function submitGuess() {
@@ -363,7 +411,11 @@ async function shareResult() {
   }
 }
 
-// --- Events ---
+// --- Custom HSV color picker ---
+// Internal color state (single source of truth for the picker).
+const hsv = { h: 265, s: 0.6, v: 1 };
+let currentHex = "#7C5CFF";
+
 // Recolor the logo live to preview the current guess (guess phase only).
 function liveRecolor(hex) {
   const norm = normalizeHex(hex);
@@ -372,16 +424,119 @@ function liveRecolor(hex) {
   els.stage.style.setProperty("--logo-fill", norm);
 }
 
-els.colorPicker.addEventListener("input", (e) => {
-  els.hexInput.value = e.target.value.replace("#", "").toUpperCase();
-  liveRecolor(e.target.value);
-});
+// Push the current HSV state out to every dependent piece of UI + game state.
+function updateColorFromHSV(writeHexInput = true) {
+  hsv.h = ((hsv.h % 360) + 360) % 360;
+  hsv.s = clamp(hsv.s, 0, 1);
+  hsv.v = clamp(hsv.v, 0, 1);
+
+  const rgb = hsvToRgb(hsv.h, hsv.s, hsv.v);
+  currentHex = rgbToHex(rgb.r, rgb.g, rgb.b);
+
+  // Preview swatch
+  els.previewSwatch.style.background = currentHex;
+
+  // Dynamic slider gradients reflect the current selection
+  els.satTrack.style.background =
+    `linear-gradient(to bottom, ${hsvHex(hsv.h, 1, hsv.v)}, ${hsvHex(hsv.h, 0, hsv.v)})`;
+  els.valTrack.style.background =
+    `linear-gradient(to bottom, ${hsvHex(hsv.h, hsv.s, 1)}, #000000)`;
+
+  // Handle positions (top = high value, bottom = low)
+  els.hueHandle.style.top = (hsv.h / 360) * 100 + "%";
+  els.satHandle.style.top = (1 - hsv.s) * 100 + "%";
+  els.valHandle.style.top = (1 - hsv.v) * 100 + "%";
+
+  // Accessibility values
+  els.hueTrack.setAttribute("aria-valuenow", Math.round(hsv.h));
+  els.satTrack.setAttribute("aria-valuenow", Math.round(hsv.s * 100));
+  els.valTrack.setAttribute("aria-valuenow", Math.round(hsv.v * 100));
+
+  if (writeHexInput) els.hexInput.value = currentHex.replace("#", "");
+
+  // The guessed color used by the game is read from the hex value at submit;
+  // keep the live logo preview in sync too.
+  liveRecolor(currentHex);
+}
+
+// Sync all three sliders (and the rest of the UI) from a hex string.
+function updateSlidersFromHex(hex, writeHexInput = true) {
+  const norm = normalizeHex(hex);
+  if (!norm) return false;
+  const rgb = hexToRgb(norm);
+  const got = rgbToHsv(rgb.r, rgb.g, rgb.b);
+  hsv.h = got.h;
+  hsv.s = got.s;
+  hsv.v = got.v;
+  updateColorFromHSV(writeHexInput);
+  return true;
+}
+
+// Wire a vertical slider track to a channel via fraction-from-top (0 = top).
+function bindSlider(track, getFraction, setFraction) {
+  let dragging = false;
+
+  const applyFromEvent = (e) => {
+    const rect = track.getBoundingClientRect();
+    const f = clamp((e.clientY - rect.top) / rect.height, 0, 1);
+    setFraction(f);
+  };
+
+  track.addEventListener("pointerdown", (e) => {
+    dragging = true;
+    track.setPointerCapture(e.pointerId);
+    applyFromEvent(e);
+    e.preventDefault();
+  });
+  track.addEventListener("pointermove", (e) => {
+    if (dragging) applyFromEvent(e);
+  });
+  const stop = (e) => {
+    dragging = false;
+    try { track.releasePointerCapture(e.pointerId); } catch (err) { /* noop */ }
+  };
+  track.addEventListener("pointerup", stop);
+  track.addEventListener("pointercancel", stop);
+
+  track.addEventListener("keydown", (e) => {
+    let f = getFraction();
+    const step = 0.02;
+    if (e.key === "ArrowUp" || e.key === "ArrowLeft") f -= step;
+    else if (e.key === "ArrowDown" || e.key === "ArrowRight") f += step;
+    else if (e.key === "PageUp") f -= step * 5;
+    else if (e.key === "PageDown") f += step * 5;
+    else if (e.key === "Home") f = 0;
+    else if (e.key === "End") f = 1;
+    else return;
+    e.preventDefault();
+    setFraction(clamp(f, 0, 1));
+  });
+}
+
+bindSlider(
+  els.hueTrack,
+  () => hsv.h / 360,
+  (f) => { hsv.h = f * 360; updateColorFromHSV(); }
+);
+bindSlider(
+  els.satTrack,
+  () => 1 - hsv.s,
+  (f) => { hsv.s = 1 - f; updateColorFromHSV(); }
+);
+bindSlider(
+  els.valTrack,
+  () => 1 - hsv.v,
+  (f) => { hsv.v = 1 - f; updateColorFromHSV(); }
+);
+
+// --- Events ---
 els.hexInput.addEventListener("input", (e) => {
-  const norm = normalizeHex(e.target.value);
-  if (norm) {
-    els.colorPicker.value = norm.toLowerCase();
-    liveRecolor(norm);
-  }
+  // Don't rewrite the field while the user is typing in it.
+  updateSlidersFromHex(e.target.value, false);
+});
+els.hexInput.addEventListener("blur", () => {
+  // Normalise the field on blur if it holds a valid color.
+  if (normalizeHex(els.hexInput.value)) els.hexInput.value = currentHex.replace("#", "");
 });
 els.hexInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") submitGuess();
